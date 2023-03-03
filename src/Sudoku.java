@@ -38,7 +38,7 @@ public class Sudoku
     private Texture loadTexture[];
     private Texture checkBoxTexture[];
     //Logic
-    private Integer[][] numbers;
+    private int[][] numbers;
     private int checkedX = -1, checkedY = -1;
     private boolean showCand = false;
 
@@ -52,7 +52,7 @@ public class Sudoku
 
     private void initNumbers()
     {
-        numbers = new Integer[9][9];
+        numbers = new int[9][9];
         for (int i = 0;i<9;i++)
             for(int j = 0;j<9;j++)
                 numbers[i][j] = 0;
@@ -239,9 +239,9 @@ public class Sudoku
         {
             pressed = true;
 
-//            Solver solver(this->number);
-//            this->number = solver.returnAllNumbers();
-//            this->updateNumbers();
+            Solver solver = new Solver(numbers);
+            numbers = solver.returnSolution();
+            updateNumbers();
         }
 
         else if (resetButton.getGlobalBounds().contains(mousePosition) && Mouse.isButtonPressed(Mouse.Button.LEFT))
@@ -273,7 +273,7 @@ public class Sudoku
 //                    for (int k = 1;k < 10;k++)
 //                        this->checkedCand[i][j][k] = false;
 
-            numbers = FileManager.Load();
+            numbers = FileManager.Load(numbers);
             updateNumbers();
 //
 //            //Wyczyszczenie wszystkich wartości w wyświetlaniu metod

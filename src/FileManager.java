@@ -7,7 +7,7 @@ import java.util.Scanner;
 
 public class FileManager {
 
-    public static Integer[][] Load() throws FileNotFoundException {
+    public static int[][] Load(int[][] numbers) throws FileNotFoundException {
         JFileChooser fileChooser = new JFileChooser();
 
         fileChooser.setCurrentDirectory(new File("./Saves"));
@@ -19,22 +19,20 @@ public class FileManager {
             File file = new File(fileChooser.getSelectedFile().getAbsolutePath());
             Scanner scanner = new Scanner(file);
 
-            Integer[][] numbers = new Integer[9][9];
-
             for(int i = 0;i<9;i++)
             {
                 String line = scanner.nextLine();
                 for(int j = 0;j<9;j++)
-                    numbers[i][j] = Integer.parseInt(String.valueOf(line.charAt(j)));
+                    numbers[i][j] = Character.getNumericValue(line.charAt(j));
             }
 
             return numbers;
         }
 
-        return null;
+        return numbers;
     }
 
-    public static void Save(Integer[][] numbers) throws FileNotFoundException {
+    public static void Save(int[][] numbers) throws FileNotFoundException {
         JFileChooser fileChooser = new JFileChooser();
 
         fileChooser.setCurrentDirectory(new File("./Saves"));
