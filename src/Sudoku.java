@@ -8,6 +8,8 @@ import org.jsfml.window.Mouse;
 import org.jsfml.window.VideoMode;
 import org.jsfml.window.event.Event;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Paths;
 
@@ -23,6 +25,7 @@ public class Sudoku
     private RectangleShape solveButton;
     private RectangleShape saveButton;
     private RectangleShape loadButton;
+    private RectangleShape checkBox;
     private RectangleShape[][] box;
 
     //Textures
@@ -33,6 +36,7 @@ public class Sudoku
     private Texture solveTexture[];
     private Texture saveTexture[];
     private Texture loadTexture[];
+    private Texture checkBoxTexture[];
     //Logic
     private Integer[][] numbers;
     private int checkedX = -1, checkedY = -1;
@@ -90,6 +94,11 @@ public class Sudoku
         loadTexture[0] = new Texture();
         loadTexture[1] = new Texture();
 
+        checkBox = new RectangleShape();
+        checkBoxTexture = new Texture[2];
+        checkBoxTexture[0] = new Texture();
+        checkBoxTexture[1] = new Texture();
+
 
         board.setPosition(0.f,0.f);
         board.setSize(new Vector2f(700.f, 700.f));
@@ -116,6 +125,12 @@ public class Sudoku
         loadTexture[0].loadFromFile(Paths.get("Textures/load.png"));
         loadButton.setTexture(loadTexture[0]);
 
+        checkBox.setPosition(750.f, 625.f);
+        checkBox.setSize(new Vector2f(50.f, 50.f));
+        checkBoxTexture[0].loadFromFile(Paths.get("Textures/check2.png"));
+        checkBoxTexture[1].loadFromFile(Paths.get("Textures/check.png"));
+        checkBox.setTexture(checkBoxTexture[0]);
+
         loadTexture[1].loadFromFile(Paths.get("Textures/load-hover.png"));
         saveTexture[1].loadFromFile(Paths.get("Textures/save-hover.png"));
         solveTexture[1].loadFromFile(Paths.get("Textures/solve-hover.png"));
@@ -129,6 +144,7 @@ public class Sudoku
         window.draw(solveButton);
         window.draw(loadButton);
         window.draw(saveButton);
+        window.draw(checkBox);
     }
 
     private void initBoxes() throws IOException //inicjowanie pól
@@ -215,6 +231,109 @@ public class Sudoku
 
             }
         }
+    }
+
+    private void menu() throws FileNotFoundException //wywoływanie klas i funkcji po naciśnięciu przycisków
+    {
+        if (solveButton.getGlobalBounds().contains(mousePosition) && Mouse.isButtonPressed(Mouse.Button.LEFT) && !pressed)
+        {
+            pressed = true;
+
+//            Solver solver(this->number);
+//            this->number = solver.returnAllNumbers();
+//            this->updateNumbers();
+        }
+
+        else if (resetButton.getGlobalBounds().contains(mousePosition) && Mouse.isButtonPressed(Mouse.Button.LEFT))
+        {
+            for (int i = 0;i < 9;i++)
+            {
+                for (int j = 0;j < 9;j++)
+                {
+                    box[i][j].setTexture(boxTextures[0]);
+                    numbers[i][j] = 0;
+//                    for (int k = 1;k < 10;k++)
+//                        this->checkedCand[i][j][k] = false;
+                }
+            }
+
+//            for (int i = 0;i < 9;i++)
+//                for (int j = 0;j < 9;j++)
+//                    for (int k = 0;k < 10;k++)
+//                    {
+//                        candMethod[i][j][k] = false;
+//                        candMethodDel[i][j][k] = false;
+//                    }
+        }
+
+        else if (loadButton.getGlobalBounds().contains(mousePosition) && Mouse.isButtonPressed(Mouse.Button.LEFT))
+        {
+//            for (int i = 0;i < 9;i++)
+//                for (int j = 0;j < 9;j++)
+//                    for (int k = 1;k < 10;k++)
+//                        this->checkedCand[i][j][k] = false;
+
+            numbers = FileManager.Load();
+            updateNumbers();
+//
+//            //Wyczyszczenie wszystkich wartości w wyświetlaniu metod
+//            for (int i = 0;i < 3;i++)
+//                this->methodNumber[i] = i;
+//
+//            this->selectedMethod = -1;
+//            this->startPoint = 0;
+//
+//            for (int i = 0;i < 9;i++)
+//                for (int j = 0;j < 9;j++)
+//                    for (int k = 0;k < 10;k++)
+//                    {
+//                        this->candMethod[i][j][k] = false;
+//                        this->candMethodDel[i][j][k] = false;
+//                    }
+        }
+
+        else if (saveButton.getGlobalBounds().contains(mousePosition) && Mouse.isButtonPressed(Mouse.Button.LEFT))
+        {
+            FileManager.Save(numbers);
+        }
+
+        else if (checkBox.getGlobalBounds().contains(mousePosition) && Mouse.isButtonPressed(Mouse.Button.LEFT) && !pressed)
+        {
+            pressed = true;
+            if (!showCand)
+            {
+                showCand = true;
+                checkBox.setTexture(checkBoxTexture[1]);
+            }
+            else
+            {
+                showCand = false;
+                checkBox.setTexture(checkBoxTexture[0]);
+            }
+        }
+    }
+
+    private void updateButtons() //zmiana koloru przycisków przy najechaniu kursorem na nie
+    {
+        if (resetButton.getGlobalBounds().contains(mousePosition))
+            resetButton.setTexture(resetTexture[1]);
+        else
+            resetButton.setTexture(resetTexture[0]);
+
+        if (solveButton.getGlobalBounds().contains(mousePosition))
+            solveButton.setTexture(solveTexture[1]);
+        else
+            solveButton.setTexture(solveTexture[0]);
+
+        if (loadButton.getGlobalBounds().contains(mousePosition))
+            loadButton.setTexture(loadTexture[1]);
+        else
+            loadButton.setTexture(loadTexture[0]);
+
+        if (saveButton.getGlobalBounds().contains(mousePosition))
+            saveButton.setTexture(saveTexture[1]);
+        else
+            saveButton.setTexture(saveTexture[0]);
     }
 
     private void updateBoxes()
@@ -441,13 +560,14 @@ public class Sudoku
 //        }
 //    }
 
-    public void update()
-    {
+    public void update() throws FileNotFoundException {
         running();
         poolEvent();
         updateMousePosition();
         updateBoxes();
+        updateButtons();
         updateNumbers();
+        menu();
     }
 
     public void render()
