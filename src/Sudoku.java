@@ -1,7 +1,4 @@
-import org.jsfml.graphics.Color;
-import org.jsfml.graphics.RectangleShape;
-import org.jsfml.graphics.RenderWindow;
-import org.jsfml.graphics.Texture;
+import org.jsfml.graphics.*;
 import org.jsfml.system.Vector2f;
 import org.jsfml.window.Keyboard;
 import org.jsfml.window.Mouse;
@@ -28,6 +25,7 @@ public class Sudoku
     private RectangleShape loadButton;
     private RectangleShape checkBox;
     private RectangleShape[][] box;
+    private RectangleShape logo;
 
     //Textures
     private Texture boardTexture;
@@ -38,13 +36,13 @@ public class Sudoku
     private Texture saveTexture[];
     private Texture loadTexture[];
     private Texture checkBoxTexture[];
+    private Texture logoTexture;
+
     //Logic
     private int[][] numbers;
     private int checkedX = -1, checkedY = -1;
     private boolean showCand = false;
-
     private ArrayList<ArrayList<ArrayList<RectangleShape>>> candBox;
-
     private ArrayList<ArrayList<ArrayList<Integer>>> candidates;
 
     //Checked CandBox
@@ -53,7 +51,10 @@ public class Sudoku
     private Texture candTexture[];
     private Texture checkedCandTexture[];
 
-    public void initWindow() // inicjowanie okna
+    private Font font;
+    private Text text;
+
+    private void initWindow() // inicjowanie okna
     {
         window = new RenderWindow(new VideoMode(1000,700), "Sudoku solver");
         window.setFramerateLimit(60);
@@ -144,6 +145,24 @@ public class Sudoku
         saveTexture[1].loadFromFile(Paths.get("Textures/save-hover.png"));
         solveTexture[1].loadFromFile(Paths.get("Textures/solve-hover.png"));
         resetTexture[1].loadFromFile(Paths.get("Textures/reset-hover.png"));
+
+        font = new Font();
+        text = new Text();
+        font.loadFromFile(Paths.get("Fonts/arial.ttf"));
+        text.setFont(font);
+        text.setString("Candidates");
+        text.setPosition(new Vector2f(810.f, 626.f));
+        text.setCharacterSize(35);
+        text.setColor(Color.WHITE);
+
+
+        logo = new RectangleShape();
+        logoTexture = new Texture();
+        logo.setPosition(693.f, 30.f);
+        logo.setSize(new Vector2f(312.f, 175.5f));
+        logoTexture.loadFromFile(Paths.get("Textures/logo.png"));
+        logo.setTexture(logoTexture);
+
     }
 
     private void initCandidates() throws IOException
@@ -202,6 +221,8 @@ public class Sudoku
         window.draw(loadButton);
         window.draw(saveButton);
         window.draw(checkBox);
+        window.draw(text);
+        window.draw(logo);
     }
 
     private void initBoxes() throws IOException //inicjowanie pól
@@ -314,14 +335,6 @@ public class Sudoku
                         checkedCand[i][j][k] = false;
                 }
             }
-
-//            for (int i = 0;i < 9;i++)
-//                for (int j = 0;j < 9;j++)
-//                    for (int k = 0;k < 10;k++)
-//                    {
-//                        candMethod[i][j][k] = false;
-//                        candMethodDel[i][j][k] = false;
-//                    }
         }
 
         else if (loadButton.getGlobalBounds().contains(mousePosition) && Mouse.isButtonPressed(Mouse.Button.LEFT))
@@ -333,21 +346,6 @@ public class Sudoku
 
             numbers = FileManager.Load(numbers);
             updateNumbers();
-//
-//            //Wyczyszczenie wszystkich wartości w wyświetlaniu metod
-//            for (int i = 0;i < 3;i++)
-//                this->methodNumber[i] = i;
-//
-//            this->selectedMethod = -1;
-//            this->startPoint = 0;
-//
-//            for (int i = 0;i < 9;i++)
-//                for (int j = 0;j < 9;j++)
-//                    for (int k = 0;k < 10;k++)
-//                    {
-//                        this->candMethod[i][j][k] = false;
-//                        this->candMethodDel[i][j][k] = false;
-//                    }
         }
 
         else if (saveButton.getGlobalBounds().contains(mousePosition) && Mouse.isButtonPressed(Mouse.Button.LEFT))
@@ -686,25 +684,17 @@ public class Sudoku
                     else
                         candBox.get(i).get(j).get(k).setTexture(candTexture[candidates.get(i).get(j).get(k)]);
 
+                    if (i == checkedY && j == checkedX)
+                        candBox.get(i).get(j).get(k).setFillColor(greyColor);
+                    else
+                        candBox.get(i).get(j).get(k).setFillColor(Color.WHITE);
                 }
             }
         }
     }
 
-//    public void updateButton()
-//    {
-//        if (button.getGlobalBounds().contains(mousePosition) && Mouse.isButtonPressed(Mouse.Button.LEFT) && !pressed)
-//        {
-//            pressed = true;
-//
-//            if(button.getFillColor() == Color.CYAN)
-//                button.setFillColor(Color.GREEN);
-//            else
-//                button.setFillColor(Color.CYAN);
-//        }
-//    }
-
-    public void update() throws FileNotFoundException {
+    public void update() throws FileNotFoundException
+    {
         running();
         poolEvent();
         updateMousePosition();
@@ -725,5 +715,4 @@ public class Sudoku
             drawCandidates();
         window.display();
     }
-
 }
