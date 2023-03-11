@@ -4,6 +4,8 @@ import java.util.stream.IntStream;
 public class Solver
 {
     private int[][] numbers;
+    private ArrayList<ArrayList<ArrayList<Integer>>> candidates;
+
     public Solver(int[][] numbers)
     {
         this.numbers = numbers;
@@ -117,4 +119,60 @@ public class Solver
         return numbers;
     }
 
+    private void findCandidate()
+    {
+        ArrayList<ArrayList<ArrayList<Integer>>> tab = new ArrayList<>(9);
+
+        for(int i = 0;i<9;i++)
+        {
+            tab.add(new ArrayList<ArrayList<Integer>>(9));
+            for (int j = 0; j < 9; j++) {
+                tab.get(i).add(new ArrayList<Integer>());
+            }
+        }
+
+        for (int i = 0;i < 9;i++)
+        {
+            for (int j = 0;j < 9;j++)
+            {
+                if (numbers[i][j] != 0)
+                tab.get(i).get(j).add(10);
+                else
+                {
+                    for (int k = 1;k <= 9;k++)
+                    {
+                        boolean exist = false;
+                        for (int x = 0;x < 9;x++)
+                        {
+                            if (k == numbers[i][x])
+                            {
+                                exist = true;
+                                break;
+                            }
+                        }
+                        for (int x = 0;x < 9;x++)
+                        {
+                            if (k == numbers[x][j])
+                            {
+                                exist = true;
+                                break;
+                            }
+                        }
+                        if (existInSquare(i, j, k))
+                        exist = true;
+
+                        if (!exist)
+                            tab.get(i).get(j).add(k);
+                    }
+                }
+            }
+        }
+        candidates = tab;
+    }
+
+    public ArrayList<ArrayList<ArrayList<Integer>>> returnCandidates()
+    {
+        findCandidate();
+        return candidates;
+    }
 }

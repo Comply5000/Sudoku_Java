@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 
 public class Sudoku
 {
@@ -42,11 +43,19 @@ public class Sudoku
     private int checkedX = -1, checkedY = -1;
     private boolean showCand = false;
 
+    private ArrayList<ArrayList<ArrayList<RectangleShape>>> candBox;
 
+    private ArrayList<ArrayList<ArrayList<Integer>>> candidates;
+
+    //Checked CandBox
+    private boolean checkedCand[][][];
+
+    private Texture candTexture[];
+    private Texture checkedCandTexture[];
 
     public void initWindow() // inicjowanie okna
     {
-        window = new RenderWindow(new VideoMode(1000,850), "Sudoku solver");
+        window = new RenderWindow(new VideoMode(1000,700), "Sudoku solver");
         window.setFramerateLimit(60);
     }
 
@@ -137,6 +146,54 @@ public class Sudoku
         resetTexture[1].loadFromFile(Paths.get("Textures/reset-hover.png"));
     }
 
+    private void initCandidates() throws IOException
+    {
+        ArrayList<ArrayList<ArrayList<Integer>>> tab1 = new ArrayList<>(9);
+
+        for(int i = 0;i<9;i++)
+        {
+            tab1.add(new ArrayList<ArrayList<Integer>>(9));
+            for (int j = 0; j < 9; j++)
+            {
+                tab1.get(i).add(new ArrayList<Integer>());
+            }
+        }
+
+        candidates = tab1;
+
+        checkedCand = new boolean[9][9][10];
+
+        candTexture = new Texture[10];
+        for(int i = 0;i<10;i++)
+            candTexture[i] = new Texture();
+
+        checkedCandTexture = new Texture[10];
+        for(int i = 0;i<10;i++)
+            checkedCandTexture[i] = new Texture();
+
+        for (int i = 1;i < 10;i++)
+        {
+            String t = "Textures/CandText/" + i + ".png";
+            candTexture[i].loadFromFile(Paths.get(t));
+            t = "Textures/CheckedCand/" + i + ".png";
+            checkedCandTexture[i].loadFromFile(Paths.get(t));
+        }
+    }
+
+    private void drawCandidates()
+    {
+        for (int i = 0;i < 9;i++)
+        {
+            for (int j = 0;j < 9;j++)
+            {
+                for (int k = 0;k < candBox.get(i).get(j).size();k++)
+                {
+                    window.draw(candBox.get(i).get(j).get(k));
+                }
+            }
+        }
+    }
+
     private void drawBoard() //narysowanie planszy
     {
         window.draw(board);
@@ -194,6 +251,7 @@ public class Sudoku
         try
         {
             initBoard();
+            initCandidates();
             initBoxes();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -252,8 +310,8 @@ public class Sudoku
                 {
                     box[i][j].setTexture(boxTextures[0]);
                     numbers[i][j] = 0;
-//                    for (int k = 1;k < 10;k++)
-//                        this->checkedCand[i][j][k] = false;
+                    for (int k = 1;k < 10;k++)
+                        checkedCand[i][j][k] = false;
                 }
             }
 
@@ -268,10 +326,10 @@ public class Sudoku
 
         else if (loadButton.getGlobalBounds().contains(mousePosition) && Mouse.isButtonPressed(Mouse.Button.LEFT))
         {
-//            for (int i = 0;i < 9;i++)
-//                for (int j = 0;j < 9;j++)
-//                    for (int k = 1;k < 10;k++)
-//                        this->checkedCand[i][j][k] = false;
+            for (int i = 0;i < 9;i++)
+                for (int j = 0;j < 9;j++)
+                    for (int k = 1;k < 10;k++)
+                        checkedCand[i][j][k] = false;
 
             numbers = FileManager.Load(numbers);
             updateNumbers();
@@ -346,16 +404,16 @@ public class Sudoku
                 if (box[i][j].getGlobalBounds().contains(mousePosition) && Mouse.isButtonPressed(Mouse.Button.LEFT) && !pressed)
                 {
                     //sprawdza czy zosta³ kliknêty kandydat a nie pole
-//                    bool candClick = false;
-//                    for (int k = 0;k < this->candBox[i][j].size();k++)
-//                    if (this->candBox[i][j][k].getGlobalBounds().contains(this->mousePosition))
-//                    {
-//                        candClick = true;
-//                        break;
-//                    }
+                    boolean candClick = false;
+                    for (int k = 0; k < candBox.get(i).get(j).size(); k++)
+                        if (candBox.get(i).get(j).get(k).getGlobalBounds().contains(mousePosition))
+                        {
+                            candClick = true;
+                            break;
+                        }
 
                     //jesli nie zosta³ klikniêty kandydat lub pokazywanie kandydatów jest wy³¹czone
-                    //if (!candClick || !showCand)
+                    if (!candClick || !showCand)
                     {
                         pressed = true;
                         if (checkedX == j && checkedY == i)
@@ -547,6 +605,92 @@ public class Sudoku
         mousePosition = window.mapPixelToCoords(Mouse.getPosition(window));
     }
 
+    void updateCandidates()
+    {
+        //aktualizowanie pozycji kandydatów
+        var solver = new Solver(numbers);
+        candidates = solver.returnCandidates();
+
+        ArrayList<ArrayList<ArrayList<RectangleShape>>> tab = new ArrayList<>(9);
+
+        for(int i = 0;i<9;i++)
+        {
+            tab.add(new ArrayList<ArrayList<RectangleShape>>(9));
+            for (int j = 0; j < 9; j++)
+            {
+                tab.get(i).add(new ArrayList<RectangleShape>());
+            }
+        }
+
+        for (int i = 0;i < 9;i++)
+        {
+            for (int j = 0;j < 9;j++)
+            {
+                if (numbers[i][j] == 0)
+                {
+                    float x = 0;
+                    float y = 0;
+                    var chuj = tab.get(i).get(j).size();
+                    for (int k = 0;k < candidates.get(i).get(j).size();k++)
+                    {
+                        var a = new RectangleShape();
+                        a.setPosition(box[i][j].getPosition().x + x, box[i][j].getPosition().y + y);
+                        a.setSize(new Vector2f(17.5f, 17.5f));
+                        a.setTexture(candTexture[candidates.get(i).get(j).get(k)]);
+                        tab.get(i).get(j).add(a);
+
+                        if (x == 52.5)
+                        {
+                            x = 0;
+                            y += 17.5;
+                        }
+                        else
+                            x += 17.5;
+
+                    }
+                }
+            }
+        }
+        candBox = tab;
+
+        //aktualizowanie zaznaczenia kandydatów
+        for (int i = 0;i < 9;i++)
+        {
+            for (int j = 0;j < 9;j++)
+            {
+                for (int k = 0;k < candBox.get(i).get(j).size();k++)
+                {
+                    if (candBox.get(i).get(j).get(k).getGlobalBounds().contains(mousePosition) && Mouse.isButtonPressed(Mouse.Button.LEFT) && !pressed)
+                    {
+                        pressed = true;
+                        if(checkedCand[i][j][candidates.get(i).get(j).get(k)] == true)
+                            checkedCand[i][j][candidates.get(i).get(j).get(k)] = false;
+                        else
+                            checkedCand[i][j][candidates.get(i).get(j).get(k)] = true;
+                    }
+                }
+            }
+        }
+    }
+
+    private void updateCandColor()
+    {
+        for (int i = 0;i < 9;i++)
+        {
+            for (int j = 0;j < 9;j++)
+            {
+                for (int k = 0;k < candBox.get(i).get(j).size();k++)
+                {
+                    if (checkedCand[i][j][candidates.get(i).get(j).get(k)] == true)
+                        candBox.get(i).get(j).get(k).setTexture(checkedCandTexture[candidates.get(i).get(j).get(k)]);
+                    else
+                        candBox.get(i).get(j).get(k).setTexture(candTexture[candidates.get(i).get(j).get(k)]);
+
+                }
+            }
+        }
+    }
+
 //    public void updateButton()
 //    {
 //        if (button.getGlobalBounds().contains(mousePosition) && Mouse.isButtonPressed(Mouse.Button.LEFT) && !pressed)
@@ -567,6 +711,8 @@ public class Sudoku
         updateBoxes();
         updateButtons();
         updateNumbers();
+        updateCandidates();
+        updateCandColor();
         menu();
     }
 
@@ -575,6 +721,8 @@ public class Sudoku
         window.clear();
         drawBoard();
         drawBoxes();
+        if(showCand)
+            drawCandidates();
         window.display();
     }
 
